@@ -52,3 +52,10 @@ https://techdocs.zebra.com/datawedge/latest/guide/samples/basicintent1/
 Install the APK First
 then open the app
 Move on DataWedge application and check that a profile auto created "May29ZebraDeviceTestApp"
+
+============JUNE 4=======
+https://techdocs.zebra.com/datawedge/latest/guide/api/setconfig/
+
+https://techdocs.zebra.com/datawedge/latest/guide/input/barcode/#readerparams
+
+https://www.zebra.com/us/en/products/spec-sheets/mobile-computers/handheld/tc73-tc78.html

@@ -3031,7 +3031,7 @@ __metadata:
     prettier: 2.8.8
     react: 18.2.0
     react-native: 0.74.1
-    react-native-datawedge-intents: ^0.1.8
+    react-native-datawedge-intents: GemsEssence/react-native-datawedge-intents-fork
     react-native-elements: ^3.4.3
     react-native-safe-area-context: ^4.8.2
     react-native-vector-icons: ^10.0.3
@@ -8035,12 +8035,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-datawedge-intents@npm:^0.1.8":
+react-native-datawedge-intents@GemsEssence/react-native-datawedge-intents-fork:
   version: 0.1.8
-  resolution: "react-native-datawedge-intents@npm:0.1.8"
+  resolution: "react-native-datawedge-intents@https://github.com/GemsEssence/react-native-datawedge-intents-fork.git#commit=b66c1cc78ff431f05dc7a49c8fe7314590d59e36"
   peerDependencies:
     react-native: ">=0.56"
-  checksum: c604c950557b177764a557943a151333a5662848c2dcc24e3ef52b703f53aa0de81478ca0f279019d97c1311fafadb0eae6a4672663144e9cc9f0a9ed8c3ba64
+  checksum: 15e8ce8685b39c873ce1ea54b8598b30cdc26a7271a98e42fb709e36c45be8e5b4c15faac3422357f4612e543965c739b2f392651e5d5abdaab50085a5c9e977
   languageName: node
   linkType: hard
 
