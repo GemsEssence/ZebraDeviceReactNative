@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import {Button} from 'react-native-elements';
 import DataWedgeIntents from 'react-native-datawedge-intents';
+import ErrorBoundary from './ErrorBoundary';
 
 const PROFILE_APP_NAME1 = 'May29ZebraDeviceTestApp1';
 const PROFILE_APP_NAME2 = 'May29ZebraDeviceTestApp2';
@@ -40,6 +41,10 @@ const DW_INTENTS = {
 
 const App = () => {
   const [loading, setLoading] = useState(true);
+  const [btnNumber, setBtnNumber] = useState(0);
+
+  const [allData, setAllData] = useState([]);
+
   const [data, setData] = useState({
     lastApiText: 'Messages from DataWedge will go here',
     dwStatus: 'STATUS WILL BE HERE',
@@ -69,9 +74,10 @@ const App = () => {
   };
 
   const handleAlert = (title, message) => {
-    Alert.alert(title, message, [
-      {text: 'OK', onPress: () => console.log('OK Pressed')},
-    ]);
+    setAllData(prevState => [...prevState, title, message]);
+    // Alert.alert(title, message, [
+    //   {text: 'OK', onPress: () => console.log('OK Pressed')},
+    // ]);
   };
 
   const getDataWedgeStatus = intent => {
@@ -300,6 +306,7 @@ const App = () => {
       scanner_selection: 'auto',
       scanner_selection_by_identifier: 'AUTO',
     });
+    setBtnNumber(1);
   };
 
   const onPressScanButton2 = () => {
@@ -311,6 +318,7 @@ const App = () => {
       scanner_input_enabled: true,
       aim_mode: 'on',
     });
+    setBtnNumber(2);
   };
 
   const onPressScanButton3 = () => {
@@ -319,6 +327,7 @@ const App = () => {
       scanner_selection_by_identifier: 'AUTO',
       beam_timer: 10000,
     });
+    setBtnNumber(3);
   };
 
   const onPressScanButton4 = () => {
@@ -332,6 +341,7 @@ const App = () => {
       beam_timer: 10000,
       aim_type: 3,
     });
+    setBtnNumber(4);
   };
 
   const onPressScanButton5 = () => {
@@ -345,6 +355,7 @@ const App = () => {
       beam_timer: 10000,
       aim_type: 3,
     });
+    setBtnNumber(5);
   };
 
   const onPressScanButton6 = () => {
@@ -352,116 +363,288 @@ const App = () => {
       scanner_selection: 'auto',
       scanner_selection_by_identifier: 'INTERNAL_CAMERA',
     });
+    setBtnNumber(6);
   };
 
-  console.log('=========data===========', data);
+  const showResBtn = () => {
+    Alert.alert('all Data: ', JSON.stringify(allData));
+    setBtnNumber(0);
+  };
+
+  const btnRes1 = btnNumber === 1;
+  const btnRes2 = btnNumber === 2;
+  const btnRes3 = btnNumber === 3;
+  const btnRes4 = btnNumber === 4;
+  const btnRes5 = btnNumber === 5;
+  const btnRes6 = btnNumber === 6;
+
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        <Text style={styles.h1}>POC: Zebra ReactNative DataWedge Demo</Text>
-        <Text style={styles.h3}>Information / Configuration</Text>
+    <ErrorBoundary>
+      <ScrollView>
+        <View style={styles.container}>
+          <Text style={styles.h1}>POC: Zebra ReactNative DataWedge Demo</Text>
+          <Text style={styles.h3}>Information / Configuration</Text>
 
-        <Text style={styles.itemHeading}>Active Profile</Text>
-        <Text style={styles.itemText}>{data.activeProfileText}</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              left: 10,
+              fontWeight: 'bold',
+              color: '#000000',
+            }}>
+            Active Profile
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              margin: 10,
+              color: '#000000',
+            }}>
+            {data.activeProfileText}
+          </Text>
 
-        <Text style={styles.itemHeading}>DataWedge Status: </Text>
-        <Text style={styles.itemText}>{data.dwStatus}</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              left: 10,
+              fontWeight: 'bold',
+              color: '#000000',
+            }}>
+            DataWedge Status:{' '}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              margin: 10,
+              color: '#000000',
+            }}>
+            {data.dwStatus}
+          </Text>
 
-        <Text style={styles.itemHeading}>LastApiText: </Text>
-        <Text style={styles.itemText}>{data.lastApiText}</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              left: 10,
+              fontWeight: 'bold',
+              color: '#000000',
+            }}>
+            LastApiText:{' '}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              margin: 10,
+              color: '#000000',
+            }}>
+            {data.lastApiText}
+          </Text>
 
-        <Text style={styles.itemHeading}>DataWedge Version: </Text>
-        <Text style={styles.itemText}>{data.dwVersion}</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              left: 10,
+              fontWeight: 'bold',
+              color: '#000000',
+            }}>
+            DataWedge Version:{' '}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              margin: 10,
+              color: '#000000',
+            }}>
+            {data.dwVersion}
+          </Text>
 
-        <Text style={styles.itemHeading}>enumeratedScannersText: </Text>
-        <Text style={styles.itemText}>{data.enumeratedScannersText}</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              left: 10,
+              fontWeight: 'bold',
+              color: '#000000',
+            }}>
+            enumeratedScannersText:{' '}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              margin: 10,
+              color: '#000000',
+            }}>
+            {data.enumeratedScannersText}
+          </Text>
 
-        <Text>Scans Count: {data.scans.length}</Text>
+          <Text>Scans Count: {data.scans.length}</Text>
 
-        {loading && <ActivityIndicator size="large" />}
+          <Text
+            style={{
+              fontSize: 12,
+              textAlign: 'left',
+              left: 10,
+              fontWeight: 'bold',
+              color: '#000000',
+            }}>
+            Scanned barcodes will be displayed here:
+          </Text>
 
-        <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
-          <View style={{margin: 5}}>
-            <Button
-              disabled={loading}
-              title="Scan Btn1"
-              color="#333333"
-              buttonStyle={styles.btn}
-              onPress={onPressScanButton}
-            />
+          {data.scans.map((item, index) => {
+            return (
+              <>
+                <Text style={[styles.scanData, {color: 'black'}]} key={index}>
+                  {index} : {item.data}
+                </Text>
+              </>
+            );
+          })}
+
+          {loading && <ActivityIndicator size="large" />}
+
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes1}
+                title="Btn1"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes1}
+                title="Response Btn1"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
           </View>
-          <View style={{margin: 5}}>
-            <Button
-              disabled={loading}
-              title="Scan Btn2"
-              color="#333333"
-              buttonStyle={styles.btn}
-              onPress={onPressScanButton2}
-            />
-          </View>
-          <View style={{margin: 5}}>
-            <Button
-              disabled={loading}
-              title="Scan Btn3"
-              color="#333333"
-              buttonStyle={styles.btn}
-              onPress={onPressScanButton3}
-            />
+
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes2}
+                title="Btn2"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton2}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes2}
+                title="Response Btn2"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
           </View>
 
-          <View style={{margin: 5}}>
-            <Button
-              disabled={loading}
-              title="Scan Btn4"
-              color="#333333"
-              buttonStyle={styles.btn}
-              onPress={onPressScanButton4}
-            />
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes3}
+                title="Btn3"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton3}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes3}
+                title="Response Btn3"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
           </View>
 
-          <View style={{margin: 5}}>
-            <Button
-              disabled={loading}
-              title="Scan Btn5"
-              color="#333333"
-              buttonStyle={styles.btn}
-              onPress={onPressScanButton5}
-            />
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes4}
+                title="Btn4"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton4}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes4}
+                title="Response Btn4"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
           </View>
 
-          <View style={{margin: 5}}>
-            <Button
-              disabled={loading}
-              title="Scan Btn6"
-              color="#333333"
-              buttonStyle={styles.btn}
-              onPress={onPressScanButton6}
-            />
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes5}
+                title="Btn5"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton5}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes5}
+                title="Response Btn5"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
+          </View>
+
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes6}
+                title="Btn6"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton6}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes6}
+                title="Response Btn6"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
           </View>
         </View>
-
-        <Text style={styles.itemHeading}>
-          Scanned barcodes will be displayed here:
-        </Text>
-
-        {data.scans.map((item, index) => {
-          return (
-            <>
-              <Text style={styles.scanData} key={index}>
-                {index} : {item.data}
-              </Text>
-            </>
-          );
-        })}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </ErrorBoundary>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#FFFFFF',
     marginHorizontal: 10,
   },
   btn: {
