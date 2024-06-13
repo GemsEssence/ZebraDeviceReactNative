@@ -55,9 +55,9 @@ const AppScanner = () => {
   });
 
   const sendCommand = (extraName, extraValue, sendCommandResult = false) => {
-    console.log(
-      'Sending Command: ' + extraName + ', ' + JSON.stringify(extraValue),
-    );
+    // console.log(
+    //   'Sending Command: ' + extraName + ', ' + JSON.stringify(extraValue),
+    // );
 
     const broadcastExtras = {};
     broadcastExtras[extraName] = extraValue;
@@ -94,14 +94,14 @@ const AppScanner = () => {
   const enumerateScanners = enumeratedScanners => {
     let humanReadableScannerList = '';
     for (let i = 0; i < enumeratedScanners.length; i++) {
-      console.log(
-        'Scanner found: name= ' +
-          enumeratedScanners[i].SCANNER_NAME +
-          ', id=' +
-          enumeratedScanners[i].SCANNER_INDEX +
-          ', connected=' +
-          enumeratedScanners[i].SCANNER_CONNECTION_STATE,
-      );
+      // console.log(
+      //   'Scanner found: name= ' +
+      //     enumeratedScanners[i].SCANNER_NAME +
+      //     ', id=' +
+      //     enumeratedScanners[i].SCANNER_INDEX +
+      //     ', connected=' +
+      //     enumeratedScanners[i].SCANNER_CONNECTION_STATE,
+      // );
       humanReadableScannerList += enumeratedScanners[i].SCANNER_NAME;
       if (i < enumeratedScanners.length - 1) {
         humanReadableScannerList += ', ';
@@ -114,7 +114,7 @@ const AppScanner = () => {
   const barcodeScanned = (scanData, timeOfScan) => {
     const scannedData = scanData['com.symbol.datawedge.data_string'];
     const scannedType = scanData['com.symbol.datawedge.label_type'];
-    console.log('Scan: ' + scannedData);
+    // console.log('Scan: ' + scannedData);
     let scans = [...data.scan];
     scans.unshift({
       data: scannedData,
@@ -152,9 +152,9 @@ const AppScanner = () => {
       //  The version has been returned (DW 6.3 or higher).  Includes the DW version along with other subsystem versions e.g MX
       const versionInfo =
         intent['com.symbol.datawedge.api.RESULT_GET_VERSION_INFO'];
-      console.log('Version Info: ' + JSON.stringify(versionInfo));
+      // console.log('Version Info: ' + JSON.stringify(versionInfo));
       const datawedgeVersion = versionInfo.DATAWEDGE;
-      console.log('Datawedge version: ' + datawedgeVersion);
+      // console.log('Datawedge version: ' + datawedgeVersion);
 
       setData({...data, dwVersion: datawedgeVersion});
     } else if (
