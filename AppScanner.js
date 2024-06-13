@@ -1,0 +1,714 @@
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ *
+ * @format
+ * @flow
+ */
+
+import React, {useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Alert,
+  NativeModules,
+  NativeEventEmitter,
+  ActivityIndicator,
+  ToastAndroid,
+} from 'react-native';
+import {Button} from 'react-native-elements';
+import DataWedgeIntents from 'react-native-datawedge-intents';
+
+const PROFILE_APP_NAME1 = 'May29ZebraDeviceTestApp11';
+const PROFILE_APP_NAME2 = 'May29ZebraDeviceTestApp21';
+const PROFILE_APP_NAME3 = 'May29ZebraDeviceTestApp31';
+const PROFILE_APP_NAME4 = 'May29ZebraDeviceTestApp41';
+const PROFILE_APP_NAME5 = 'May29ZebraDeviceTestApp51';
+const PROFILE_APP_NAME6 = 'May29ZebraDeviceTestApp61';
+
+const RESULT_INTENTS = {
+  RESULT_GET_DATAWEDGE_STATUS:
+    'com.symbol.datawedge.api.RESULT_GET_DATAWEDGE_STATUS',
+};
+
+const DW_INTENTS = {
+  CREATE_PROFILE: 'com.symbol.datawedge.api.CREATE_PROFILE',
+  SET_CONFIG: 'com.symbol.datawedge.api.SET_CONFIG',
+};
+
+const AppScanner = () => {
+  const [loading, setLoading] = useState(true);
+  const [btnNumber, setBtnNumber] = useState(0);
+
+  const [allData, setAllData] = useState([]);
+
+  const [data, setData] = useState({
+    lastApiText: 'Messages from DataWedge will go here',
+    dwStatus: 'STATUS WILL BE HERE',
+    dwVersion:
+      'Pre 6.3.  Please create and configure profile manually.  See the ReadMe for more details',
+    enumeratedScannersText: 'Requires DataWedge 6.3+',
+    activeProfileText: 'Requires DataWedge 6.3+',
+    scans: [],
+  });
+
+  const sendCommand = (extraName, extraValue, sendCommandResult = false) => {
+    console.log(
+      'Sending Command: ' + extraName + ', ' + JSON.stringify(extraValue),
+    );
+
+    const broadcastExtras = {};
+    broadcastExtras[extraName] = extraValue;
+
+    if (sendCommandResult) {
+      broadcastExtras.SEND_RESULT = 'true';
+    }
+
+    DataWedgeIntents.sendBroadcastWithExtras({
+      action: 'com.symbol.datawedge.api.ACTION',
+      extras: broadcastExtras,
+    });
+  };
+
+  const handleAlert = (title, message) => {
+    setAllData(prevState => [...prevState, title, message]);
+    ToastAndroid.show(`Scan ${message}`, ToastAndroid.SHORT);
+    // Alert.alert(title, message, [
+    //   {text: 'OK', onPress: () => console.log('OK Pressed')},
+    // ]);
+  };
+
+  const getDataWedgeStatus = intent => {
+    sendCommand('com.symbol.datawedge.api.GET_DATAWEDGE_STATUS', '');
+  };
+
+  // const handleDataWedgeScan = intent => {
+  //   const scanData = intent['com.symbol.datawedge.data_string'];
+  //   const decodedData = intent['com.symbol.datawedge.label_type'];
+  //   console.log('Scanned data:', scanData);
+  //   console.log('Decoded data:', decodedData);
+  // };
+
+  const enumerateScanners = enumeratedScanners => {
+    let humanReadableScannerList = '';
+    for (let i = 0; i < enumeratedScanners.length; i++) {
+      console.log(
+        'Scanner found: name= ' +
+          enumeratedScanners[i].SCANNER_NAME +
+          ', id=' +
+          enumeratedScanners[i].SCANNER_INDEX +
+          ', connected=' +
+          enumeratedScanners[i].SCANNER_CONNECTION_STATE,
+      );
+      humanReadableScannerList += enumeratedScanners[i].SCANNER_NAME;
+      if (i < enumeratedScanners.length - 1) {
+        humanReadableScannerList += ', ';
+      }
+    }
+
+    setData({...data, enumeratedScannersText: humanReadableScannerList});
+  };
+
+  const barcodeScanned = (scanData, timeOfScan) => {
+    const scannedData = scanData['com.symbol.datawedge.data_string'];
+    const scannedType = scanData['com.symbol.datawedge.label_type'];
+    console.log('Scan: ' + scannedData);
+    let scans = [...data.scan];
+    scans.unshift({
+      data: scannedData,
+      decoder: scannedType,
+      timeAtDecode: timeOfScan,
+    });
+    setData({...data, scans: scans});
+  };
+
+  const broadcastReceiver = intent => {
+    handleAlert('Broadcast Receiver: ', JSON.stringify(intent));
+
+    if (intent.hasOwnProperty(RESULT_INTENTS.RESULT_GET_DATAWEDGE_STATUS)) {
+      const dwStatus = intent[RESULT_INTENTS.RESULT_GET_DATAWEDGE_STATUS];
+      setData({...data, dwStatus: dwStatus});
+    }
+
+    if (intent.hasOwnProperty('RESULT_INFO')) {
+      const commandResult =
+        intent.RESULT +
+        ' (' +
+        intent.COMMAND.substring(
+          intent.COMMAND.lastIndexOf('.') + 1,
+          intent.COMMAND.length,
+        ) +
+        ')'; // + JSON.stringify(intent.RESULT_INFO);
+      const sdata = {...data, lastApiText: commandResult.toLowerCase()};
+      handleAlert('State Data: ', JSON.stringify(sdata));
+      setData({...data, lastApiText: commandResult.toLowerCase()});
+    }
+
+    if (
+      intent.hasOwnProperty('com.symbol.datawedge.api.RESULT_GET_VERSION_INFO')
+    ) {
+      //  The version has been returned (DW 6.3 or higher).  Includes the DW version along with other subsystem versions e.g MX
+      const versionInfo =
+        intent['com.symbol.datawedge.api.RESULT_GET_VERSION_INFO'];
+      console.log('Version Info: ' + JSON.stringify(versionInfo));
+      const datawedgeVersion = versionInfo.DATAWEDGE;
+      console.log('Datawedge version: ' + datawedgeVersion);
+
+      setData({...data, dwVersion: datawedgeVersion});
+    } else if (
+      intent.hasOwnProperty(
+        'com.symbol.datawedge.api.RESULT_ENUMERATE_SCANNERS',
+      )
+    ) {
+      //  Return from our request to enumerate the available scanners
+      const enumeratedScannersObj =
+        intent['com.symbol.datawedge.api.RESULT_ENUMERATE_SCANNERS'];
+      enumerateScanners(enumeratedScannersObj);
+    } else if (
+      intent.hasOwnProperty(
+        'com.symbol.datawedge.api.RESULT_GET_ACTIVE_PROFILE',
+      )
+    ) {
+      //  Return from our request to obtain the active profile
+      const activeProfileObj =
+        intent['com.symbol.datawedge.api.RESULT_GET_ACTIVE_PROFILE'];
+      setData({...data, activeProfileText: activeProfileObj});
+    } else if (!intent.hasOwnProperty('RESULT_INFO')) {
+      //  A barcode has been scanned
+      barcodeScanned(intent, new Date().toLocaleString());
+    }
+  };
+
+  useEffect(() => {
+    const eventEmitter = new NativeEventEmitter(NativeModules.DataWedgeIntents);
+
+    const subscription = eventEmitter.addListener(
+      'datawedge_broadcast_intent',
+      broadcastReceiver,
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const registerBroadcastReceiver = () => {
+    DataWedgeIntents.registerBroadcastReceiver({
+      filterActions: [
+        'com.zebradevicetestapp.ACTION',
+        'com.symbol.datawedge.api.RESULT_ACTION',
+      ],
+      filterCategories: ['android.intent.category.DEFAULT'],
+    });
+  };
+
+  const determineVersion = () => {
+    sendCommand('com.symbol.datawedge.api.GET_VERSION_INFO', '');
+  };
+
+  useEffect(() => {
+    getDataWedgeStatus();
+    setLoading(true);
+    setTimeout(() => {
+      registerBroadcastReceiver();
+      determineVersion();
+      setLoading(false);
+    }, 2000);
+  }, []);
+
+  const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  const createProfile = async profileName => {
+    sendCommand(DW_INTENTS.CREATE_PROFILE, profileName, true);
+    await delay(2000);
+    sendCommand(
+      'com.symbol.datawedge.api.SWITCH_TO_PROFILE',
+      profileName,
+      true,
+    );
+  };
+
+  const profileUpdate = (profileName, plugInParams) => {
+    // Configure the profile after a short delay to ensure it has been created
+    const configureProfile = {
+      PROFILE_NAME: profileName,
+      PROFILE_ENABLED: 'true',
+      CONFIG_MODE: 'CREATE_IF_NOT_EXIST',
+      PLUGIN_CONFIG: {
+        PLUGIN_NAME: 'BARCODE',
+        RESET_CONFIG: 'true',
+        PARAM_LIST: plugInParams,
+      },
+      APP_LIST: [
+        {
+          PACKAGE_NAME: 'com.zebradevicetestapp',
+          ACTIVITY_LIST: ['*'],
+        },
+      ],
+    };
+    sendCommand(DW_INTENTS.SET_CONFIG, configureProfile, true);
+  };
+
+  const profileIntentUpdate = profileName => {
+    // Configure the profile after a short delay to ensure it has been created
+    const configureProfile = {
+      PROFILE_NAME: profileName,
+      PROFILE_ENABLED: 'true',
+      CONFIG_MODE: 'UPDATE',
+      PLUGIN_CONFIG: {
+        PLUGIN_NAME: 'INTENT',
+        RESET_CONFIG: 'true',
+        PARAM_LIST: {
+          intent_output_enabled: 'true',
+          intent_action: 'com.zebradevicetestapp.ACTION',
+          intent_delivery: '2',
+        },
+      },
+    };
+    sendCommand(DW_INTENTS.SET_CONFIG, configureProfile, true);
+  };
+
+  const handleButtonPress = async (profileName, plugInParams) => {
+    if (loading) {
+      handleAlert('Please wait', 'Please let to complete some process');
+    } else {
+      setAllData([]);
+      setLoading(true);
+      ToastAndroid.show(`Scan ${profileName}`, ToastAndroid.SHORT);
+      createProfile(profileName);
+      await delay(2000);
+      sendCommand('com.symbol.datawedge.api.GET_ACTIVE_PROFILE', '');
+      profileUpdate(profileName, plugInParams);
+      await delay(2000);
+      profileIntentUpdate(profileName);
+      await delay(2000);
+
+      sendCommand(
+        'com.symbol.datawedge.api.SOFT_SCAN_TRIGGER',
+        'STOP_SCANNING',
+        true,
+      );
+      await delay(2000);
+      sendCommand(
+        'com.symbol.datawedge.api.SOFT_SCAN_TRIGGER',
+        'START_SCANNING',
+        true,
+      );
+      await delay(2000);
+      ToastAndroid.show('Scan might start', ToastAndroid.LONG);
+      setLoading(false);
+    }
+  };
+
+  const onPressScanButton = () => {
+    handleButtonPress(PROFILE_APP_NAME1, {
+      scanner_selection: 'auto',
+      scanner_selection_by_identifier: 'AUTO',
+    });
+    setBtnNumber(1);
+  };
+
+  const onPressScanButton2 = () => {
+    handleButtonPress(PROFILE_APP_NAME2, {
+      scanner_selection: 'auto',
+      scanner_selection_by_identifier: 'AUTO',
+      barcode_trigger_mode: 1,
+      scanning_mode: 1,
+      scanner_input_enabled: true,
+      aim_mode: 'on',
+    });
+    setBtnNumber(2);
+  };
+
+  const onPressScanButton3 = () => {
+    handleButtonPress(PROFILE_APP_NAME3, {
+      scanner_selection: 'auto',
+      scanner_selection_by_identifier: 'AUTO',
+      beam_timer: 10000,
+    });
+    setBtnNumber(3);
+  };
+
+  const onPressScanButton4 = () => {
+    handleButtonPress(PROFILE_APP_NAME4, {
+      scanner_selection: 'auto',
+      scanner_selection_by_identifier: 'AUTO',
+      barcode_trigger_mode: 1,
+      scanning_mode: 1,
+      scanner_input_enabled: true,
+      aim_mode: 'on',
+      beam_timer: 10000,
+      aim_timer: 10000,
+      aim_type: 3,
+    });
+    setBtnNumber(4);
+  };
+
+  const onPressScanButton5 = () => {
+    handleButtonPress(PROFILE_APP_NAME5, {
+      scanner_selection: 'auto',
+      scanner_selection_by_identifier: 'INTERNAL_CAMERA',
+      barcode_trigger_mode: 1,
+      scanning_mode: 1,
+      scanner_input_enabled: true,
+      aim_mode: 'on',
+      beam_timer: 10000,
+      aim_timer: 10000,
+      aim_type: 3,
+    });
+    setBtnNumber(5);
+  };
+
+  const onPressScanButton6 = () => {
+    handleButtonPress(PROFILE_APP_NAME6, {
+      scanner_selection: 'auto',
+      scanner_selection_by_identifier: 'INTERNAL_CAMERA',
+    });
+    setBtnNumber(6);
+  };
+
+  const showResBtn = () => {
+    Alert.alert('all Data: ', JSON.stringify(allData));
+    setBtnNumber(0);
+  };
+
+  const btnRes1 = btnNumber === 1;
+  const btnRes2 = btnNumber === 2;
+  const btnRes3 = btnNumber === 3;
+  const btnRes4 = btnNumber === 4;
+  const btnRes5 = btnNumber === 5;
+  const btnRes6 = btnNumber === 6;
+
+  return (
+    <ScrollView>
+      <View style={styles.container}>
+        <Text style={styles.h1}>POC: Zebra ReactNative DataWedge Demo</Text>
+        <Text style={styles.h3}>Information / Configuration</Text>
+
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            left: 10,
+            fontWeight: 'bold',
+            color: '#000000',
+          }}>
+          Active Profile
+        </Text>
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            margin: 10,
+            color: '#000000',
+          }}>
+          {data.activeProfileText}
+        </Text>
+
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            left: 10,
+            fontWeight: 'bold',
+            color: '#000000',
+          }}>
+          DataWedge Status:{' '}
+        </Text>
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            margin: 10,
+            color: '#000000',
+          }}>
+          {data.dwStatus}
+        </Text>
+
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            left: 10,
+            fontWeight: 'bold',
+            color: '#000000',
+          }}>
+          LastApiText:{' '}
+        </Text>
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            margin: 10,
+            color: '#000000',
+          }}>
+          {data.lastApiText}
+        </Text>
+
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            left: 10,
+            fontWeight: 'bold',
+            color: '#000000',
+          }}>
+          DataWedge Version:{' '}
+        </Text>
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            margin: 10,
+            color: '#000000',
+          }}>
+          {data.dwVersion}
+        </Text>
+
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            left: 10,
+            fontWeight: 'bold',
+            color: '#000000',
+          }}>
+          enumeratedScannersText:{' '}
+        </Text>
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            margin: 10,
+            color: '#000000',
+          }}>
+          {data.enumeratedScannersText}
+        </Text>
+
+        <Text>Scans Count: {data.scans.length}</Text>
+
+        <Text
+          style={{
+            fontSize: 12,
+            textAlign: 'left',
+            left: 10,
+            fontWeight: 'bold',
+            color: '#000000',
+          }}>
+          Scanned barcodes will be displayed here:
+        </Text>
+
+        {data.scans.map((item, index) => {
+          return (
+            <>
+              <Text style={[styles.scanData, {color: 'black'}]} key={index}>
+                {index} : {item.data}
+              </Text>
+            </>
+          );
+        })}
+
+        {loading && <ActivityIndicator size="large" />}
+
+        <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes4}
+                title="Btn4"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton4}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes4}
+                title="Response Btn4"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
+          </View>
+
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes3}
+                title="Btn3"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton3}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes3}
+                title="Response Btn3"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
+          </View>
+
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || btnRes6}
+                title="Btn6"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={onPressScanButton6}
+              />
+            </View>
+            <View style={{margin: 5}}>
+              <Button
+                disabled={loading || !btnRes6}
+                title="Response Btn6"
+                color="#333333"
+                buttonStyle={styles.btn}
+                onPress={showResBtn}
+              />
+            </View>
+          </View>
+        </View>
+
+        <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+          <View style={{margin: 5}}>
+            <Button
+              disabled={loading || btnRes2}
+              title="Btn2"
+              color="#333333"
+              buttonStyle={styles.btn}
+              onPress={onPressScanButton2}
+            />
+          </View>
+          <View style={{margin: 5}}>
+            <Button
+              disabled={loading || !btnRes2}
+              title="Response Btn2"
+              color="#333333"
+              buttonStyle={styles.btn}
+              onPress={showResBtn}
+            />
+          </View>
+        </View>
+
+        <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+          <View style={{margin: 5}}>
+            <Button
+              disabled={loading || btnRes5}
+              title="Btn5"
+              color="#333333"
+              buttonStyle={styles.btn}
+              onPress={onPressScanButton3}
+            />
+          </View>
+          <View style={{margin: 5}}>
+            <Button
+              disabled={loading || !btnRes5}
+              title="Response Btn5"
+              color="#333333"
+              buttonStyle={styles.btn}
+              onPress={showResBtn}
+            />
+          </View>
+        </View>
+
+        <View style={{flexDirection: 'row', flexWrap: 'wrap', marginTop: 10}}>
+          <View style={{margin: 5}}>
+            <Button
+              disabled={loading || btnRes1}
+              title="Btn1"
+              color="#333333"
+              buttonStyle={styles.btn}
+              onPress={onPressScanButton}
+            />
+          </View>
+          <View style={{margin: 5}}>
+            <Button
+              disabled={loading || !btnRes1}
+              title="Response Btn1"
+              color="#333333"
+              buttonStyle={styles.btn}
+              onPress={showResBtn}
+            />
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 10,
+  },
+  btn: {
+    height: 45,
+    borderColor: 'transparent',
+    borderWidth: 0,
+    borderRadius: 5,
+  },
+  instructions: {
+    textAlign: 'center',
+    color: '#333333',
+    marginBottom: 5,
+  },
+  h1: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 5,
+    fontWeight: 'bold',
+  },
+  h3: {
+    fontSize: 14,
+    textAlign: 'center',
+    margin: 10,
+    fontWeight: 'bold',
+  },
+  itemHeading: {
+    fontSize: 12,
+    textAlign: 'left',
+    left: 10,
+    fontWeight: 'bold',
+  },
+  itemText: {
+    fontSize: 12,
+    textAlign: 'left',
+    margin: 10,
+  },
+  itemTextAttention: {
+    fontSize: 12,
+    textAlign: 'left',
+    margin: 10,
+  },
+  scanDataHead: {
+    fontSize: 10,
+    margin: 2,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  scanDataHeadRight: {
+    fontSize: 10,
+    margin: 2,
+    textAlign: 'right',
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  scanData: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    margin: 2,
+    color: 'white',
+  },
+});
+
+export default AppScanner;

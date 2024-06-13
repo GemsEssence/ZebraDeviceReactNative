@@ -1,52 +1,31 @@
-import React, {useState} from 'react';
-import {View, Text, Button, StyleSheet} from 'react-native';
+// ErrorBoundary.js
+import React from 'react';
+import {View, Text, Button, Alert} from 'react-native';
+import ErrorBoundary from 'react-native-error-boundary';
 
-const ErrorBoundary = ({children}) => {
-  const [error, setError] = useState(null);
-  const [errorInfo, setErrorInfo] = useState(null);
-
-  const handleReset = () => {
-    setError(null);
-    setErrorInfo(null);
+const GlobalErrorBoundary = ({children}) => {
+  const errorHandler = (error, stackTrace) => {
+    // Handle error as needed
+    // Example: Show an alert with the error details
+    Alert.alert(
+      'Error Occurred',
+      `Error: ${error.message}\n\nStack Trace:\n${stackTrace}`,
+    );
   };
 
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={[styles.errorText, {color: 'black'}]}>
-          Something went wrong.
-        </Text>
-        <Text style={[styles.errorDetails, {color: 'black'}]}>
-          {error && error.toString()}
-        </Text>
-        <Text style={[styles.errorDetails, {color: 'black'}]}>
-          {errorInfo && errorInfo.componentStack}
-        </Text>
-        <Button title="Try again" onPress={handleReset} />
-      </View>
-    );
-  }
+  const CustomFallback = ({error, resetError}) => (
+    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <Text style={{fontSize: 18}}>Something went wrong!</Text>
+      {error && <Text>Error: {error.message}</Text>}
+      <Button title="Dismiss" onPress={resetError} />
+    </View>
+  );
 
-  return children;
+  return (
+    <ErrorBoundary FallbackComponent={CustomFallback} onError={errorHandler}>
+      {children}
+    </ErrorBoundary>
+  );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  errorDetails: {
-    fontSize: 12,
-    color: 'red',
-    marginBottom: 20,
-  },
-});
-
-export default ErrorBoundary;
+export default GlobalErrorBoundary;

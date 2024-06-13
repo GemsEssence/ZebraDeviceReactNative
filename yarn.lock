@@ -3033,6 +3033,7 @@ __metadata:
     react-native: 0.74.1
     react-native-datawedge-intents: GemsEssence/react-native-datawedge-intents-fork
     react-native-elements: ^3.4.3
+    react-native-error-boundary: ^1.2.4
     react-native-safe-area-context: ^4.8.2
     react-native-vector-icons: ^10.0.3
     react-test-renderer: 18.2.0
@@ -8060,6 +8061,20 @@ react-native-datawedge-intents@GemsEssence/react-native-datawedge-intents-fork:
     react-native-safe-area-context: ">= 3.0.0"
     react-native-vector-icons: ">7.0.0"
   checksum: e055c18b85527366d7b9e76139828fe3d006a7a8c11f81b165e43b4175c0d4b15eef6308679dd596d33f0813a512c27cb993d6ca49e00c56fcb15a0918d96c6c
+  languageName: node
+  linkType: hard
+
+"react-native-error-boundary@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "react-native-error-boundary@npm:1.2.4"
+  peerDependencies:
+    "@types/react-native": ">=0.57.7"
+    react: ">=16.6.0"
+    react-native: ">=0.57.7"
+  peerDependenciesMeta:
+    "@types/react-native":
+      optional: true
+  checksum: c047da0b40b840941e2f9f1447a755b35d45957fbefe4f8e9e05156f0d84df4da46bf5df21fecc18272be1570a14452db80ab5c26aef1611c9488be932f84b1d
   languageName: node
   linkType: hard
 
