@@ -30,6 +30,7 @@ const DW_INTENTS = {
 
 const AppScanner = () => {
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState(null);
 
   const [data, setData] = useState(JSON.stringify(''));
   const [scanStarted, setScanStarted] = useState(false);
@@ -59,22 +60,60 @@ const AppScanner = () => {
   };
 
   const broadcastReceiver = intent => {
-    handleAlert('Broadcast Receiver: ', JSON.stringify(intent));
+    // handleAlert('Broadcast Receiver: ', JSON.stringify(intent));
     setData(JSON.stringify(intent));
   };
 
-  useEffect(() => {
-    const eventEmitter = new NativeEventEmitter(NativeModules.DataWedgeIntents);
+  // useEffect(() => {
+  //   const eventEmitter = new NativeEventEmitter(NativeModules.DataWedgeIntents);
 
-    const subscription = eventEmitter.addListener(
+  //   const subscription = eventEmitter.addListener(
+  //     'datawedge_broadcast_intent',
+  //     broadcastReceiver,
+  //   );
+
+  //   console.log('=====subscription===========', subscription);
+
+  //   return () => {
+  //     console.log('=====remove===========', subscription);
+  //     subscription.remove();
+  //   };
+  // }, []);
+
+  const startListener = () => {
+    const eventEmitter = new NativeEventEmitter(NativeModules.DataWedgeIntents);
+    const newSubscription = eventEmitter.addListener(
       'datawedge_broadcast_intent',
       broadcastReceiver,
     );
+    // console.log('=====subscription===========', newSubscription);
+    setSubscription(newSubscription);
 
-    return () => {
+    setTimeout(() => {
+      handleAlert(
+        'Ready!',
+        'Please press device hardware button to start scanning',
+      );
+    }, 1000);
+  };
+
+  const stopListener = () => {
+    if (subscription) {
+      // console.log('=====remove===========', subscription);
       subscription.remove();
+      setSubscription(null);
+    }
+  };
+
+  // Cleanup listener on component unmount
+  useEffect(() => {
+    return () => {
+      if (subscription) {
+        // console.log('=====useEffect remove===========', subscription);
+        stopListener();
+      }
     };
-  }, []);
+  }, [subscription]);
 
   const registerBroadcastReceiver = () => {
     DataWedgeIntents.registerBroadcastReceiver({
@@ -157,21 +196,23 @@ const AppScanner = () => {
 
   const stopScanning = () => {
     setScanStarted(false);
-    sendCommand(
-      'com.symbol.datawedge.api.SOFT_SCAN_TRIGGER',
-      'STOP_SCANNING',
-      true,
-    );
+    stopListener();
+    // sendCommand(
+    //   'com.symbol.datawedge.api.SOFT_SCAN_TRIGGER',
+    //   'STOP_SCANNING',
+    //   true,
+    // );
   };
 
   const startScanning = async () => {
     setScanStarted(true);
-    sendCommand(
-      'com.symbol.datawedge.api.SOFT_SCAN_TRIGGER',
-      'START_SCANNING',
-      true,
-    );
-    ToastAndroid.show('Scan might start', ToastAndroid.LONG);
+    startListener();
+    // sendCommand(
+    //   'com.symbol.datawedge.api.SOFT_SCAN_TRIGGER',
+    //   'START_SCANNING',
+    //   true,
+    // );
+    // ToastAndroid.show('Scan might start', ToastAndroid.LONG);
   };
 
   const profileConfigure = async (profileName, plugInParams) => {
@@ -212,6 +253,32 @@ const AppScanner = () => {
               onPress={stopScanning}
             />
           </View>
+        </View>
+        <View
+          style={{backgroundColor: 'yellow', padding: 5, marginVertical: 10}}>
+          {subscription ? (
+            <Text
+              style={{
+                fontSize: 14,
+                textAlign: 'left',
+                left: 10,
+                fontWeight: 'bold',
+                color: '#000000',
+              }}>
+              Listener is active
+            </Text>
+          ) : (
+            <Text
+              style={{
+                fontSize: 14,
+                textAlign: 'left',
+                left: 10,
+                fontWeight: 'bold',
+                color: '#000000',
+              }}>
+              Listener is inactive
+            </Text>
+          )}
         </View>
         <View style={{borderColor: 'grey', borderWidth: 1}}>
           <Text
