@@ -79,7 +79,7 @@ const AppScanner = () => {
   const registerBroadcastReceiver = () => {
     DataWedgeIntents.registerBroadcastReceiver({
       filterActions: [
-        'com.zebradevicetestapp.ACTION',
+        'com.zebradevicetestapp.ACTION', // // [OUR_APP_PACKAGE_NAME].ACTION
         'com.symbol.datawedge.api.RESULT_ACTION',
       ],
       filterCategories: ['android.intent.category.DEFAULT'],
@@ -128,7 +128,7 @@ const AppScanner = () => {
       },
       APP_LIST: [
         {
-          PACKAGE_NAME: 'com.zebradevicetestapp',
+          PACKAGE_NAME: 'com.zebradevicetestapp', // Our app package name
           ACTIVITY_LIST: ['*'],
         },
       ],
@@ -147,7 +147,7 @@ const AppScanner = () => {
         RESET_CONFIG: 'true',
         PARAM_LIST: {
           intent_output_enabled: 'true',
-          intent_action: 'com.zebradevicetestapp.ACTION',
+          intent_action: 'com.zebradevicetestapp.ACTION', // [OUR_APP_PACKAGE_NAME].ACTION
           intent_delivery: '2',
         },
       },
@@ -178,7 +178,7 @@ const AppScanner = () => {
     setLoading(true);
     ToastAndroid.show(`Profile ${profileName}`, ToastAndroid.SHORT);
     createProfile(profileName);
-    await delay(2000);
+    await delay(1000);
     sendCommand('com.symbol.datawedge.api.GET_ACTIVE_PROFILE', '');
     profileUpdate(profileName, plugInParams);
     await delay(2000);
